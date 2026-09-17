@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revenue Dashboard — Equipo A vs Equipo B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f5f7; --surface:#ffffff; --surface-2:#fafbfc;
+  --ink:#10162a; --ink-2:#565f7a; --ink-3:#8b93a7;
+  --line:#e3e6ec; --line-2:#eef0f4;
+  --a:#2a78d6; --a-soft:rgba(42,120,214,.10);
+  --b:#eb6834; --b-soft:rgba(235,104,52,.10);
+  --ok:#0f9d58; --warn:#d9822b; --bad:#d64545;
+  --radius:12px;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1013; --surface:#16191d; --surface-2:#1b1f24;
+    --ink:#f2f3f5; --ink-2:#a8b0bf; --ink-3:#6f7889;
+    --line:#262b31; --line-2:#20242a;
+    --a:#3987e5; --a-soft:rgba(57,135,229,.14);
+    --b:#e0672f; --b-soft:rgba(224,103,47,.14);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1013; --surface:#16191d; --surface-2:#1b1f24;
+  --ink:#f2f3f5; --ink-2:#a8b0bf; --ink-3:#6f7889;
+  --line:#262b31; --line-2:#20242a;
+  --a:#3987e5; --a-soft:rgba(57,135,229,.14);
+  --b:#e0672f; --b-soft:rgba(224,103,47,.14);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:28px 20px 56px}
+header.top{display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; justify-content:space-between; margin-bottom:8px}
+h1{font-size:20px; font-weight:600; margin:0; letter-spacing:-.01em}
+.sub{color:var(--ink-3); font-size:13px; margin:2px 0 0}
+.pill{display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-2); background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:5px 12px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.sec{margin-top:26px}
+.sec h2{font-size:12px; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3); margin:0 0 12px}
+.grid{display:grid; gap:14px}
+.k5{grid-template-columns:repeat(auto-fit,minmax(178px,1fr))}
+.two{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px}
+.card h3{font-size:13px; font-weight:500; color:var(--ink-2); margin:0 0 3px}
+.card .hint{font-size:12px; color:var(--ink-3); margin:0 0 14px}
+.kpi-label{font-size:12px; color:var(--ink-3); margin:0 0 10px; font-weight:500}
+.row{display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:5px 0}
+.row + .row{border-top:1px solid var(--line-2)}
+.tag{font-size:11px; font-weight:600; letter-spacing:.04em; padding:1px 7px; border-radius:4px}
+.tag.a{color:var(--a); background:var(--a-soft)}
+.tag.b{color:var(--b); background:var(--b-soft)}
+.val{font-size:19px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.01em}
+.val.a{color:var(--a)} .val.b{color:var(--b)}
+.chartbox{position:relative; width:100%; height:260px}
+.chartbox.tall{height:300px}
+.chartbox.short{height:150px}
+.panel-label{font-size:12px; color:var(--ink-3); margin:0 0 4px; font-weight:500}
+.legend{display:flex; flex-wrap:wrap; gap:16px; font-size:12px; color:var(--ink-2); margin-bottom:12px}
+.legend span{display:flex; align-items:center; gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+.sw.dash{height:0;border-top:2px dashed currentColor;width:14px;border-radius:0}
+.note{font-size:13px; color:var(--ink-2); margin:14px 0 0; padding-top:13px; border-top:1px solid var(--line-2)}
+.note b{font-weight:600; color:var(--ink)}
+.bar{height:9px; border-radius:5px; background:var(--line-2); overflow:hidden; display:flex; margin-top:7px}
+.bar i{display:block; height:100%}
+.mixrow{margin-bottom:15px}
+.mixrow:last-child{margin-bottom:0}
+.mixhead{display:flex; justify-content:space-between; font-size:12px; color:var(--ink-2)}
+.mixhead b{font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink)}
+.ctrl{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:4px}
+.lever{font-size:12px; color:var(--ink-3); margin:0 0 16px}
+.presets{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px}
+.presets button{font:inherit; font-size:12.5px; color:var(--ink-2); background:var(--surface-2); border:1px solid var(--line); border-radius:999px; padding:6px 14px; cursor:pointer}
+.presets button:hover{border-color:var(--ink-3)}
+.presets button.on{background:var(--ink); color:var(--surface); border-color:var(--ink)}
+.mini{font-size:11.5px; color:var(--ink-3); margin:8px 0 0; font-variant-numeric:tabular-nums}
+.ctrl label{font-size:13px; color:var(--ink-2); white-space:nowrap}
+input[type=range]{flex:1; min-width:180px; accent-color:var(--b); height:4px}
+.out{font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; min-width:44px; text-align:right}
+.stress{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px}
+.stress .box{background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:14px 16px}
+.stress .big{font-size:26px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:-.02em; margin:4px 0 2px}
+.stress .delta{font-size:12px; font-weight:500}
+.down{color:var(--bad)}
+.scroll{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:13px; min-width:460px}
+th,td{text-align:right; padding:8px 10px; border-bottom:1px solid var(--line-2); font-variant-numeric:tabular-nums; white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3)}
+tr.sep td{border-bottom:1px solid var(--line); padding-top:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+footer{margin-top:34px; padding-top:16px; border-top:1px solid var(--line); font-size:12px; color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Revenue performance · cierre de año</h1>
+    <p class="sub">Dos equipos · mismo producto · mismo mercado · $120.000 de presupuesto cada uno</p>
+  </div>
+  <span class="pill"><span class="dot"></span>12 meses cerrados · proyección a 4 trimestres</span>
+</header>
+
+<section class="sec">
+  <h2>Resultado del año</h2>
+  <div class="grid k5">
+    <div class="card">
+      <p class="kpi-label">Facturación</p>
+      <div class="row"><span class="tag a">A</span><span class="val a">$800.000</span></div>
+      <div class="row"><span class="tag b">B</span><span class="val b">$753.000</span></div>
+    </div>
+    <div class="card">
+      <p class="kpi-label">Leads generados</p>
+      <div class="row"><span class="tag a">A</span><span class="val a">8.000</span></div>
+      <div class="row"><span class="tag b">B</span><span class="val b">6.600</span></div>
+    </div>
+    <div class="card">
+      <p class="kpi-label">Clientes cerrados</p>
+      <div class="row"><span class="tag a">A</span><span class="val a">320</span></div>
+      <div class="row"><span class="tag b">B</span><span class="val b">251</span></div>
+    </div>
+    <div class="card">
+      <p class="kpi-label">Ticket promedio</p>
+      <div class="row"><span class="tag a">A</span><span class="val a">$2.500</span></div>
+      <div class="row"><span class="tag b">B</span><span class="val b">$3.000</span></div>
+    </div>
+    <div class="card">
+      <p class="kpi-label">CAC</p>
+      <div class="row"><span class="tag a">A</span><span class="val a">$375</span></div>
+      <div class="row"><span class="tag b">B</span><span class="val b">$478</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <h2>Facturación mes a mes</h2>
+  <div class="card">
+    <h3>La misma plata, dos formas de crecer</h3>
+    <p class="hint">Ingresos mensuales en miles de dólares, enero a diciembre</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--a)"></i>Equipo A — 90% paid media</span>
+      <span><i class="sw" style="background:var(--b)"></i>Equipo B — paid + referidos + orgánico</span>
+    </div>
+    <div class="chartbox tall">
+      <canvas id="cMonthly" role="img" aria-label="Facturación mensual. El equipo A oscila entre 28 y 120 mil dólares sin tendencia clara y termina el año abajo. El equipo B sube de 30 a 85 mil de forma sostenida.">El equipo A oscila con picos y caídas y termina el año abajo; el equipo B sube de forma sostenida cada mes.</canvas>
+    </div>
+    <p class="note">El equipo A tuvo <b>el mejor mes del año</b> (enero, $120K) y también el peor (noviembre, $28K). El equipo B nunca tuvo un mes espectacular y <b>nunca tuvo un mes malo</b>: 11 de 12 meses por encima del anterior.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <h2>Composición del crecimiento</h2>
+  <div class="grid two">
+    <div class="card">
+      <h3>De dónde vinieron los leads</h3>
+      <p class="hint">Mix de canales por trimestre</p>
+      <div id="mix"></div>
+      <p class="note">El equipo A <b>terminó el año más dependiente que como empezó</b>. El equipo B bajó paid del 60% al 32% sin dejar de crecer: cada trimestre, una porción más grande de su demanda no se paga.</p>
+    </div>
+    <div class="card">
+      <h3>Leads y cierres por trimestre</h3>
+      <p class="hint">Mismos leads en Q3, distinto resultado</p>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--a)"></i>Equipo A</span>
+        <span><i class="sw" style="background:var(--b)"></i>Equipo B</span>
+      </div>
+      <p class="panel-label">Leads generados</p>
+      <div class="chartbox short">
+        <canvas id="cLeadsQ" role="img" aria-label="Leads por trimestre. Equipo A: 2500, 2000, 1800, 1700. Equipo B: 1080, 1600, 1860, 2060.">Leads por trimestre. Equipo A baja de 2.500 a 1.700. Equipo B sube de 1.080 a 2.060.</canvas>
+      </div>
+      <p class="panel-label">Clientes cerrados</p>
+      <div class="chartbox short">
+        <canvas id="cQuarter" role="img" aria-label="Cierres por trimestre. Equipo A: 110, 84, 68, 58. Equipo B: 36, 56, 76, 83.">Cierres por trimestre. Equipo A baja de 110 a 58. Equipo B sube de 36 a 83.</canvas>
+      </div>
+      <p class="note">En Q3 los dos equipos generaron prácticamente los mismos leads (1.800 vs 1.860), pero A cerró 68 y B cerró 76. <b>A no trae menos leads: los trae peores.</b></p>
+    </div>
+  </div>
+</section>
+
+<section class="sec">
+  <h2>Detalle trimestral</h2>
+  <div class="card scroll">
+    <table>
+      <thead><tr><th>Métrica</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Año</th></tr></thead>
+      <tbody>
+        <tr><td>A — leads</td><td>2.500</td><td>2.000</td><td>1.800</td><td>1.700</td><td>8.000</td></tr>
+        <tr><td>A — cierres</td><td>110</td><td>84</td><td>68</td><td>58</td><td>320</td></tr>
+        <tr><td>A — conversión</td><td>4,4%</td><td>4,2%</td><td>3,8%</td><td>3,4%</td><td>4,0%</td></tr>
+        <tr class="sep"><td>B — leads</td><td>1.080</td><td>1.600</td><td>1.860</td><td>2.060</td><td>6.600</td></tr>
+        <tr><td>B — cierres</td><td>36</td><td>56</td><td>76</td><td>83</td><td>251</td></tr>
+        <tr><td>B — conversión</td><td>3,3%</td><td>3,5%</td><td>4,1%</td><td>4,0%</td><td>3,8%</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Las curvas de conversión <b>se cruzan en Q3</b>. A empieza en 4,4% y termina en 3,4%; B empieza en 3,3% y termina en 4,0%.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <h2>Stress test</h2>
+  <div class="card">
+    <h3>Dos formas de que se te caiga el año</h3>
+    <p class="hint">Una la decide alguien. La otra pasa sola.</p>
+
+    <div class="presets">
+      <button type="button" data-cut="0" data-sat="0" class="on">Año normal</button>
+      <button type="button" data-cut="50" data-sat="0">Recorte de 50%</button>
+      <button type="button" data-cut="0" data-sat="100">Canal saturado</button>
+      <button type="button" data-cut="50" data-sat="100">Las dos juntas</button>
+    </div>
+
+    <div class="ctrl">
+      <label for="cut">Recorte de presupuesto paid</label>
+      <input type="range" id="cut" min="0" max="100" step="5" value="0">
+      <span class="out" id="cutOut">0%</span>
+    </div>
+    <p class="lever">Alguien decide bajar la pauta. Menos plata, mismo costo por lead.</p>
+
+    <div class="ctrl">
+      <label for="sat">Saturación del canal</label>
+      <input type="range" id="sat" min="0" max="100" step="5" value="0">
+      <span class="out" id="satOut">0%</span>
+    </div>
+    <p class="lever">Mismo presupuesto, pero el canal se agota: el CPL sube hasta 80% y la conversión de esos leads cae hasta 25%.</p>
+
+    <div class="stress">
+      <div class="box">
+        <span class="tag a">Equipo A · 90% paid</span>
+        <p class="big" id="aRev">$800.000</p>
+        <p class="delta" id="aDelta">sin cambios</p>
+        <p class="mini" id="aMini">320 clientes · CPL paid $15 · CAC $375</p>
+      </div>
+      <div class="box">
+        <span class="tag b">Equipo B · 40% paid</span>
+        <p class="big" id="bRev">$753.000</p>
+        <p class="delta" id="bDelta">sin cambios</p>
+        <p class="mini" id="bMini">251 clientes · CPL paid $18 · CAC $478</p>
+      </div>
+      <div class="box">
+        <p class="kpi-label">Quién gana el año</p>
+        <p class="big" id="winner">Equipo A</p>
+        <p class="delta" id="gap">por $47.000</p>
+        <p class="mini" id="floorNote">Con el escenario actual</p>
+      </div>
+    </div>
+
+    <p class="note"><b>El recorte es una decisión. La saturación es física.</b> Nadie la anuncia en una reunión: el CPL sube de a poco, la conversión baja de a poco, y el reporte mensual sigue mostrando el mismo presupuesto invertido. La caída de conversión de A durante el año —de 4,4% a 3,4%— es esto mismo pasando en cámara lenta.</p>
+    <p class="note" style="border:0;padding-top:4px;color:var(--ink-3);font-size:12px">Modelo simplificado: la porción no paga de cada equipo se mantiene constante y el presupuesto recortado no se reasigna. En la realidad referidos y orgánico también se resienten, y parte de la demanda paga migra a búsqueda de marca.</p>
+  </div>
+</section>
+
+<footer>
+  Caso construido con fines docentes. Los números son ilustrativos y están armados para que la aritmética cierre; no corresponden a una empresa real.
+</footer>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+(function(){
+  var css = getComputedStyle(document.documentElement);
+  function v(n,f){ var x = css.getPropertyValue(n).trim(); return x || f; }
+  var A = v('--a','#2a78d6'), B = v('--b','#eb6834');
+  var ink3 = v('--ink-3','#8b93a7'), line = v('--line-2','#eef0f4');
+  var fam = "'Inter',system-ui,sans-serif";
+  Chart.defaults.font.family = fam;
+  Chart.defaults.font.size = 12;
+  Chart.defaults.color = ink3;
+
+  var meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var mesA = [120,58,97,45,98,67,88,36,46,62,28,55];
+  var mesB = [30,36,42,48,56,64,72,76,80,81,83,85];
+
+  function money(k){ return '$' + Math.round(k) + 'K'; }
+
+  new Chart(document.getElementById('cMonthly'), {
+    type:'line',
+    data:{ labels:meses, datasets:[
+      { label:'Equipo A', data:mesA, borderColor:A, backgroundColor:A, borderWidth:2,
+        pointRadius:3, pointHoverRadius:5, tension:0.15, fill:false },
+      { label:'Equipo B', data:mesB, borderColor:B, backgroundColor:B, borderWidth:2,
+        borderDash:[6,4], pointRadius:3, pointHoverRadius:5, tension:0.15, fill:false }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{ legend:{display:false},
+        tooltip:{ callbacks:{ label:function(c){ return c.dataset.label + ': ' + money(c.parsed.y); } } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ color:ink3 } },
+        y:{ beginAtZero:true, grid:{ color:line }, border:{display:false},
+            ticks:{ color:ink3, callback:function(x){ return money(x); } } }
+      }
+    }
+  });
+
+  var valueLabels = {
+    id:'valueLabels',
+    afterDatasetsDraw:function(chart){
+      var ctx = chart.ctx;
+      ctx.save();
+      ctx.font = '500 11px ' + fam;
+      ctx.fillStyle = ink3;
+      ctx.textAlign = 'center';
+      chart.data.datasets.forEach(function(ds,i){
+        var meta = chart.getDatasetMeta(i);
+        meta.data.forEach(function(bar,j){
+          ctx.fillText(new Intl.NumberFormat('es-AR').format(Math.round(ds.data[j])), bar.x, bar.y - 5);
+        });
+      });
+      ctx.restore();
+    }
+  };
+
+  function quarterBars(id, dataA, dataB, maxY, unit){
+    new Chart(document.getElementById(id), {
+      type:'bar',
+      data:{ labels:['Q1','Q2','Q3','Q4'], datasets:[
+        { label:'Equipo A', data:dataA, backgroundColor:A, borderRadius:4, maxBarThickness:30 },
+        { label:'Equipo B', data:dataB, backgroundColor:B, borderRadius:4, maxBarThickness:30 }
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false,
+        layout:{ padding:{ top:16 } },
+        plugins:{ legend:{display:false},
+          tooltip:{ callbacks:{ label:function(c){ return c.dataset.label + ': ' + new Intl.NumberFormat('es-AR').format(c.parsed.y) + ' ' + unit; } } } },
+        scales:{ x:{ grid:{display:false}, ticks:{color:ink3} },
+                 y:{ beginAtZero:true, max:maxY, grid:{color:line}, border:{display:false}, ticks:{display:false} } }
+      },
+      plugins:[valueLabels]
+    });
+  }
+
+  quarterBars('cLeadsQ', [2500,2000,1800,1700], [1080,1600,1860,2060], 2900, 'leads');
+  quarterBars('cQuarter', [110,84,68,58], [36,56,76,83], 130, 'clientes');
+
+  function rgba(hex,al){
+    var h = hex.replace('#','');
+    if(h.length===3){ h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2]; }
+    var n = parseInt(h,16);
+    return 'rgba(' + ((n>>16)&255) + ',' + ((n>>8)&255) + ',' + (n&255) + ',' + al + ')';
+  }
+
+  var mixData = [
+    { t:'Equipo A', rows:[
+      {q:'Q1', p:88, r:7,  o:5},
+      {q:'Q4', p:90, r:6,  o:4}
+    ]},
+    { t:'Equipo B', rows:[
+      {q:'Q1', p:60, r:22, o:18},
+      {q:'Q4', p:32, r:34, o:34}
+    ]}
+  ];
+  var mixEl = document.getElementById('mix');
+  var html = '';
+  mixData.forEach(function(g){
+    var col = g.t.indexOf('A')>-1 ? A : B;
+    g.rows.forEach(function(r){
+      html += '<div class="mixrow"><div class="mixhead"><span>' + g.t + ' · ' + r.q +
+        '</span><span>paid <b>' + r.p + '%</b></span></div>' +
+        '<div class="bar">' +
+        '<i style="width:' + r.p + '%;background:' + col + '"></i>' +
+        '<i style="width:' + r.r + '%;background:' + rgba(col,.45) + '"></i>' +
+        '<i style="width:' + r.o + '%;background:' + rgba(col,.2) + '"></i>' +
+        '</div></div>';
+    });
+  });
+  mixEl.innerHTML = html;
+
+  var cut = document.getElementById('cut'), sat = document.getElementById('sat');
+  var cutOut = document.getElementById('cutOut'), satOut = document.getElementById('satOut');
+  var fmt = new Intl.NumberFormat('es-AR');
+
+  var teams = {
+    a:{ budget:120000, paidBudget:108000, paidLeads:7200, organicLeads:800,
+        conv:0.040, ticket:2500, base:800000,
+        rev:document.getElementById('aRev'), d:document.getElementById('aDelta'), m:document.getElementById('aMini') },
+    b:{ budget:120000, paidBudget:48000, paidLeads:2640, organicLeads:3960,
+        conv:0.038, ticket:3000, base:753000,
+        rev:document.getElementById('bRev'), d:document.getElementById('bDelta'), m:document.getElementById('bMini') }
+  };
+
+  var winner = document.getElementById('winner'), gap = document.getElementById('gap');
+
+  function run(t, c, s){
+    var cpl0 = t.paidBudget / t.paidLeads;
+    var cpl = cpl0 * (1 + 0.8 * s);
+    var spend = t.paidBudget * (1 - c);
+    var pLeads = spend / cpl;
+    var pClients = pLeads * t.conv * (1 - 0.25 * s);
+    var oClients = t.organicLeads * t.conv;
+    var clients = pClients + oClients;
+    var invested = spend + (t.budget - t.paidBudget);
+    return { revenue: clients * t.ticket, clients: clients, cpl: cpl,
+             cac: clients > 0 ? invested / clients : 0 };
+  }
+
+  function upd(){
+    var c = Number(cut.value) / 100, s = Number(sat.value) / 100;
+    cutOut.textContent = Math.round(c * 100) + '%';
+    satOut.textContent = Math.round(s * 100) + '%';
+    var res = {};
+    ['a','b'].forEach(function(k){
+      var t = teams[k], r = run(t, c, s);
+      res[k] = r;
+      var drop = Math.round((1 - r.revenue / t.base) * 100);
+      t.rev.textContent = '$' + fmt.format(Math.round(r.revenue));
+      t.d.textContent = drop > 0 ? '−' + drop + '% de facturación' : 'sin cambios';
+      t.d.className = 'delta' + (drop > 0 ? ' down' : '');
+      t.m.textContent = Math.round(r.clients) + ' clientes · CPL paid $' +
+        Math.round(r.cpl) + ' · CAC $' + fmt.format(Math.round(r.cac));
+    });
+    var diff = res.a.revenue - res.b.revenue;
+    winner.textContent = diff >= 0 ? 'Equipo A' : 'Equipo B';
+    winner.style.color = diff >= 0 ? A : B;
+    gap.textContent = 'por $' + fmt.format(Math.round(Math.abs(diff)));
+    gap.className = 'delta';
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.presets button'), function(btn){
+    btn.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.presets button'), function(o){ o.classList.remove('on'); });
+      btn.classList.add('on');
+      cut.value = btn.dataset.cut;
+      sat.value = btn.dataset.sat;
+      upd();
+    });
+  });
+
+  function manual(){
+    Array.prototype.forEach.call(document.querySelectorAll('.presets button'), function(o){ o.classList.remove('on'); });
+    upd();
+  }
+  cut.addEventListener('input', manual);
+  sat.addEventListener('input', manual);
+  upd();
+})();
+</script>
+</body>
+</html>
